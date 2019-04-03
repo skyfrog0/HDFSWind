@@ -345,6 +345,7 @@ namespace HDFSwindow
             string dirname = e.Node.Name;
             _taskCancelTS.Cancel();
             _taskCancelTS = new CancellationTokenSource();
+            this.toolStripStatusLabelDir.Text = dirname;
             //ShowFileLoading(true);
             Task.Run(() =>
             {
@@ -490,16 +491,35 @@ namespace HDFSwindow
             {
                 if (_popInGrid)     // 删除文件
                 {
-                    var row = this.dataGridView1.CurrentRow;
-                    string fileName = row.Cells[_fileNameColIndex].Value.ToString();
-                    string dfspath = this.treeView1.SelectedNode.Name;
-                    string hdfsFile = dfspath + "/" + fileName;
-                    if (DialogResult.OK == MessageBox.Show("确定要删除文件：\"" + hdfsFile + "\" ？",
-                        "确认提示", MessageBoxButtons.OKCancel))
+                    if (this.dataGridView1.SelectedRows.Count > 1)
                     {
-                        bool bok = HdfsHelper.Rm(hdfsFile);
-                        if (bok)
+                        int n = this.dataGridView1.SelectedRows.Count;
+                        if (DialogResult.OK == MessageBox.Show("确定要删除选中的 " + n + " 个文件 ？",
+                            "确认提示", MessageBoxButtons.OKCancel))
+                        {
+                            string dfspath = this.treeView1.SelectedNode.Name;
+                            foreach (DataGridViewRow row in this.dataGridView1.SelectedRows)
+                            {
+                                string fileName = row.Cells[_fileNameColIndex].Value.ToString();
+                                string hdfsFile = dfspath + "/" + fileName;
+                                bool bok = HdfsHelper.Rm(hdfsFile);
+                            }    
                             ReloadDocsInDir(dfspath);
+                        }
+                    }
+                    else
+                    {
+                        var row = this.dataGridView1.CurrentRow;
+                        string fileName = row.Cells[_fileNameColIndex].Value.ToString();
+                        string dfspath = this.treeView1.SelectedNode.Name;
+                        string hdfsFile = dfspath + "/" + fileName;
+                        if (DialogResult.OK == MessageBox.Show("确定要删除文件：\"" + hdfsFile + "\" ？",
+                            "确认提示", MessageBoxButtons.OKCancel))
+                        {
+                            bool bok = HdfsHelper.Rm(hdfsFile);
+                            if (bok)
+                                ReloadDocsInDir(dfspath);
+                        }
                     }
                 }
                 else    //删除目录
