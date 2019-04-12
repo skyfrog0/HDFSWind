@@ -208,6 +208,9 @@ namespace HDFSwindow.HDFSCore
                 if (null == GetStatus(file))
                     return Encoding.UTF8.GetBytes("File Not Exist.");
                 string url = BuildUrl(file, WebHdfsAPI.OPEN, "user.name=atlas&noredirect=false");
+                string redirUrl = HttpClientHelperV45.GetRedirectedURL(url, HttpMethod.GET);
+                if (!string.IsNullOrWhiteSpace(redirUrl))
+                    url = TranslateHostname(redirUrl);
                 HttpResult res = HttpClientHelperV45.Request(url, new TimeSpan(1, 0, 0));
                 if (200 == res.Code)
                     return res.Content;
@@ -240,6 +243,9 @@ namespace HDFSwindow.HDFSCore
 
                 string args = string.Format("&offset={0}&length={1}", offset, size);
                 string url = BuildUrl(file, WebHdfsAPI.OPEN, "user.name=hadoop&noredirect=false" + args);
+                string redirUrl = HttpClientHelperV45.GetRedirectedURL(url, HttpMethod.GET);
+                if (!string.IsNullOrWhiteSpace(redirUrl))
+                    url = TranslateHostname(redirUrl);
                 return HttpClientHelperV45.Request(url, new TimeSpan(0, 0, 6));                
             }
             catch (Exception ex)
