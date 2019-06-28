@@ -194,7 +194,7 @@
             this.toolStripStatusLabelDir.Name = "toolStripStatusLabelDir";
             this.toolStripStatusLabelDir.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
             this.toolStripStatusLabelDir.Size = new System.Drawing.Size(72, 17);
-            this.toolStripStatusLabelDir.Text = "/sparkdata";
+            this.toolStripStatusLabelDir.Text = "/";
             // 
             // splitContainer1
             // 

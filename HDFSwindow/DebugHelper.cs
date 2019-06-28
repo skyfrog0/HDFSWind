@@ -19,15 +19,12 @@ namespace HDFSwindow
     {
         [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
         private static extern void OutputDebugString(string message);
-
-
+        
         /// <summary>
         /// 内存缓冲区
         /// </summary>
         public static MemoryStream LogStream = new MemoryStream();
         public static Object _streamMtx = new Object();
-
-        private static MyLogImpl _logger = new MyLogImpl(typeof(DebugHelper));
 
         /// <summary>
         /// 是否允许控制台输出
@@ -92,12 +89,12 @@ namespace HDFSwindow
         public static void Error(Exception ex)
         {
             string message = "异常：" + ex.Message;
-            _logger.Error(message, ex);
+            MyLog.Error(message, ex);
         }
 
         public static void Error(Exception ex, String message)
         {
-            _logger.Error(message, ex);
+            MyLog.Error(message, ex);
         }
 
 #if DEBUG
@@ -125,7 +122,7 @@ namespace HDFSwindow
         // 记录调试日志
         public static void Log(string message)
         {
-            _logger.Info(message);
+            MyLog.Info(message);
         }
 
 #else
@@ -136,87 +133,10 @@ namespace HDFSwindow
         }
         public static void Log(string message)
         {
-            _logger.Info(message);
+            MyLog.Info(message);
         }
 #endif
 
-    }
-
-    /// <summary>
-    /// ref:  https://blog.csdn.net/binnygoal/article/details/79557746
-    /// </summary>
-    public class MyLogImpl
-    {
-        private static Type _thisDeclaringType = typeof(MyLogImpl);
-        private static log4net.ILog _log = log4net.LogManager.GetLogger(_thisDeclaringType);
-
-        public MyLogImpl(Type srcClass)
-        {
-            _thisDeclaringType = srcClass;
-            _log = log4net.LogManager.GetLogger(srcClass);
-        }
-
-        public void Info(string msg)
-        {
-            _log.Info(msg);
-        }
-
-        public void Error(string msg, Exception ex)
-        {
-            _log.Error(msg, ex);
-        }
-
-        public void Error(int operatorID, string operand, int actionType, object message, string ip, string browser, string machineName, System.Exception t)
-        {
-            if (_log.IsErrorEnabled)
-            {
-                LoggingEvent loggingEvent = new LoggingEvent(_thisDeclaringType, _log.Logger.Repository, _log.Logger.Name, Level.Info, message, t);
-                loggingEvent.Properties["Operator"] = operatorID;
-                loggingEvent.Properties["Operand"] = operand;
-                loggingEvent.Properties["ActionType"] = actionType;
-                loggingEvent.Properties["IP"] = ip;
-                loggingEvent.Properties["Browser"] = browser;
-                loggingEvent.Properties["MachineName"] = machineName;
-                _log.Logger.Log(loggingEvent);
-            }
-        }
-    }
-
-    public class Log4Config
-    {
-
-        /// <summary>
-        /// 使用文本文件记录异常日志
-        /// </summary>
-        public static void LoadFileAppender()
-        {
-            string currentPath = AppDomain.CurrentDomain.BaseDirectory;
-            currentPath = Path.Combine(currentPath, @"Log");
-            string txtLogPath = Path.Combine(currentPath, "Log-" + DateTime.Now.ToString("yyyyMMdd") + ".txt");
-
-             log4net.Repository.Hierarchy.Hierarchy hier =
-                (log4net.Repository.Hierarchy.Hierarchy)log4net.LogManager.GetRepository();
-            if (hier != null)
-            {
-                FileAppender fileAppender = new FileAppender();
-                fileAppender.Name = "LogFileAppender";
-                fileAppender.File = txtLogPath;
-                fileAppender.AppendToFile = true;
-                PatternLayout patternLayout = new PatternLayout
-                {
-                    ConversionPattern =
-                        "%date  [%thread] %-5level %logger - %message%newline" 
-                        //at:%property{HostName}
-                };
-                patternLayout.ActivateOptions();
-                fileAppender.Layout = patternLayout;
-                fileAppender.Encoding = Encoding.UTF8;
-                fileAppender.ActivateOptions();
-
-                log4net.Config.BasicConfigurator.Configure(fileAppender);
-            }
-        }
-    
     }
 
 }

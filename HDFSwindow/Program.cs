@@ -16,9 +16,8 @@ namespace HDFSwindow
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-           
-            //log4net.Config.XmlConfigurator.Configure();
-            Log4Config.LoadFileAppender();
+
+            MyLog.Config();
 
             Application.Run(new FormHDFS());
         }

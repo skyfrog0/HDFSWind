@@ -23,7 +23,7 @@ namespace HDFSwindow
 
         #region 字段
 
-        private string _server = "192.98.100.125";
+        private string _server = "192.98.19.11";
         private CancellationTokenSource _taskCancelTS = new CancellationTokenSource();
         private int _fileViewKB = 100;    //文件浏览时，显示尾部的KB字节数
         private int _fileNameColIndex = 1;
@@ -43,21 +43,36 @@ namespace HDFSwindow
         // 窗体开启
         private void FormHDFS_Load(object sender, EventArgs e)
         {
-            DebugHelper.OutLog("Hello HDFS Window");
-            HdfsHelper.SetHDFSNameNode(_server);
+            //ConnectWebHDFS();
+        }
 
+        private void ConnectWebHDFS()
+        {
+            DebugHelper.OutLog("Hello HDFS Window");
+            
             // 加载顶级目录
             Task.Run(() =>
             {
-                List<HdfsFileInfo> files = LoadFileInfos("/");
-                List<HdfsFileInfo> dirs = files.Where((fi) => fi.IsDirectory).ToList();
-                List<HdfsFileInfo> docs = files.Where((fi) => !fi.IsDirectory).ToList();
-                /*files.ForEach(fi =>
+                ShowDirLoading(true);
+                try
                 {
-                    DebugHelper.OutLog(fi.ToString());
-                });*/
-                LoadDirs(dirs);
-                LoadDocs(docs);
+                    HdfsHelper.SetHDFSNameNode(_server);
+
+                    List<HdfsFileInfo> files = LoadFileInfos("/");
+                    List<HdfsFileInfo> dirs = files.Where((fi) => fi.IsDirectory).ToList();
+                    List<HdfsFileInfo> docs = files.Where((fi) => !fi.IsDirectory).ToList();
+                    /*files.ForEach(fi =>
+                    {
+                        DebugHelper.OutLog(fi.ToString());
+                    });*/
+                    LoadDirs(dirs);
+                    LoadDocs(docs);
+                }
+                catch (System.Exception ex)
+                {
+                    DebugHelper.OutLog(ex.Message);
+                }
+                ShowDirLoading(false);
             });
         }
 
@@ -150,7 +165,7 @@ namespace HDFSwindow
                         bok = HdfsHelper.UploadStream(fs, offset, _fileTransBlockSize, hdfsDir, partName);
                         fs.Close();
                     }
-                    wt.Stop();                    
+                    wt.Stop();
                     msg = string.Format("上传\"{0}\" part-{1} {2}，耗时 {3}",
                         localFile, pid, bok ? "成功" : "失败", wt.Elapsed.ToString());
                     DebugHelper.OutLog(msg);
@@ -170,7 +185,7 @@ namespace HDFSwindow
                     localFile, n, allwt.Elapsed.ToString());
                 ShowFileTransmission(true, msgtotal);
                 DebugHelper.OutLog(msgtotal);
-                
+
                 // 拼接文件名
                 string wholeFile = hdfsDir + (hdfsDir.EndsWith("/") ? "" : "/") + fileName;
                 string[] partFiles = new string[n];
@@ -303,9 +318,17 @@ namespace HDFSwindow
                 {
                     TreeNode nod = parent.Nodes.Add(str, str, 0);
                     nod.Name = parentName + "/" + str;
+                    AddFakeChildNode(nod);
                 });
             }
 
+        }
+
+        private void AddFakeChildNode(TreeNode treeNode)
+        {
+            if (null == treeNode)
+                return;
+            treeNode.Nodes.Add("...", "...", 0);
         }
 
         // 目录树 节点展开时，加载孙子节点
@@ -314,7 +337,7 @@ namespace HDFSwindow
             TreeNode currNode = e.Node;
 
             ShowDirLoading(true);
-            foreach (TreeNode nod in currNode.Nodes)
+            /*foreach (TreeNode nod in currNode.Nodes)
             {
                 string subdir = nod.Name;
                 Task.Run(() =>
@@ -325,7 +348,16 @@ namespace HDFSwindow
                     LoadDirs(subsubDirs, nod);
                     _dirLoadingLatch.Decrement();
                 });
-            }
+            }*/
+            string fsDir = currNode.Name;
+            Task.Run(() =>
+            {
+                _dirLoadingLatch.Increment();
+                List<HdfsFileInfo> files = LoadFileInfos(fsDir);
+                List<HdfsFileInfo> subDirs = files.Where((fi) => fi.IsDirectory).ToList();
+                LoadDirs(subDirs, currNode);
+                _dirLoadingLatch.Decrement();
+            });
 
             // loading progress
             Task.Run(() =>
@@ -622,7 +654,7 @@ namespace HDFSwindow
 
         #endregion
 
-        // 快捷键 F5 打开HTTPServer
+        // 快捷键 F5 刷新目录
         private void FormHDFS_KeyDown(object sender, KeyEventArgs e)
         {
             if (Keys.F5 == e.KeyCode)
@@ -631,6 +663,11 @@ namespace HDFSwindow
                 ClearTree();
                 _fileinfoCache.Clear();
                 FormHDFS_Load(null, null);
+            }
+            else if (Keys.F2 == e.KeyCode)
+            {
+                // copy current dir
+                Clipboard.SetText(this.treeView1.SelectedNode.Name);
             }
         }
 
@@ -646,7 +683,7 @@ namespace HDFSwindow
                 ClearGrid();
                 ClearTree();
                 _fileinfoCache.Clear();
-                FormHDFS_Load(null, null);  //重新加载
+                ConnectWebHDFS();  //重新加载
             }
 
         }
@@ -722,7 +759,7 @@ namespace HDFSwindow
                 Directory.CreateDirectory(destDir);
             return destDir;
         }
-                
+
 
     }
 }

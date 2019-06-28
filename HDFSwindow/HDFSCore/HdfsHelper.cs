@@ -64,9 +64,12 @@ namespace HDFSwindow.HDFSCore
             WebHdfsHost = nmAddress + ":50070";
 
             var dict = GetDataNodes();
-            foreach (var item in dict)
+            if (null != dict)
             {
-                _ipTable[item.Key] = item.Value;
+                foreach (var item in dict)
+                {
+                    _ipTable[item.Key] = item.Value;
+                }
             }
         }
 

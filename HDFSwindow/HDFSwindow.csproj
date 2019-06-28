@@ -92,6 +92,7 @@
     <Compile Include="HDFSCore\HttpClientHelperV45.cs" />
     <Compile Include="HDFSCore\HttpWebReqWrapper.cs" />
     <Compile Include="HDFSCore\WebHdfsAPI.cs" />
+    <Compile Include="MyLog.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SubWindows\FormInput.cs">
