@@ -662,7 +662,7 @@ namespace HDFSwindow
                 ClearGrid();
                 ClearTree();
                 _fileinfoCache.Clear();
-                FormHDFS_Load(null, null);
+                ConnectWebHDFS();  //重新加载
             }
             else if (Keys.F2 == e.KeyCode)
             {
